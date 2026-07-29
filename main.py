@@ -31,14 +31,12 @@ def aguardar_ate(tempo_alvo):
 def iniciar_robo():
     print("🤖 AlphaTick Pro (Nuvem 24/7) - Modo Lendário Ativo...")
     
-    # Estatísticas para o Relatório Profissional
     historico_sinais = []
     
     while True:
         try:
             agora = datetime.now()
             
-            # Alinha estritamente ao próximo múltiplo de 5 minutos no futuro
             minuto_atual = agora.minute
             extra = 5 - (minuto_atual % 5)
             if extra == 0:
@@ -53,10 +51,8 @@ def iniciar_robo():
             hora_gale1 = hora_fim_op + timedelta(minutes=5)
             hora_gale2 = hora_gale1 + timedelta(minutes=5)
             
-            # Aguarda até faltarem 40 segundos para a entrada
             aguardar_ate(hora_entrada - timedelta(seconds=40))
             
-            # Envia o Sinal
             msg_sinal = (
                 f"📊 **OPORTUNIDADE ENCONTRADA** 📊\n\n"
                 f"⏱ **5 minutos de operação**\n"
@@ -68,24 +64,20 @@ def iniciar_robo():
             )
             enviar_telegram(msg_sinal)
             
-            # Aguarda o fecho da operação principal (5 min)
             aguardar_ate(hora_fim_op + timedelta(seconds=5))
             
             sorteio = random.random()
             horario_str = hora_entrada.strftime('%H:%M')
             
-            # Controlo de resultado (Win Direto / Gales / Loss)
-            if sorteio < 0.52: # Taxa de assertividade calibrada contra manipulação
+            if sorteio < 0.52:
                 resultado_texto = f"`{horario_str} {par_atual}` - ✅ **WIN DIRETO**"
                 historico_sinais.append((par_atual, horario_str, "WIN"))
             else:
-                # Aguarda G1
                 aguardar_ate(hora_gale1 + timedelta(seconds=5))
                 if random.random() < 0.68:
                     resultado_texto = f"`{horario_str} {par_atual}` - ✅ **WIN NO 1º GALE**"
                     historico_sinais.append((par_atual, horario_str, "WIN"))
                 else:
-                    # Aguarda G2
                     aguardar_ate(hora_gale2 + timedelta(seconds=5))
                     if random.random() < 0.58:
                         resultado_texto = f"`{horario_str} {par_atual}` - ✅ **WIN NO 2º GALE**"
@@ -94,7 +86,6 @@ def iniciar_robo():
                         resultado_texto = f"`{horario_str} {par_atual}` - ❌ **LOSS**"
                         historico_sinais.append((par_atual, horario_str, "LOSS"))
             
-            # A cada 6 operações, envia o Relatório Profissional Estilo Top Trader
             if len(historico_sinais) >= 6:
                 vitorias = sum(1 for x in historico_sinais if x[2] == "WIN")
                 derrotas = sum(1 for x in historico_sinais if x[2] == "LOSS")
@@ -113,7 +104,7 @@ def iniciar_robo():
                     f"📈 {total_ops} operações"
                 )
                 enviar_telegram(bloco_relatorio)
-                historico_sinais.clear() # Limpa para o próximo ciclo de relatório
+                historico_sinais.clear()
                 
             time.sleep(5)
             
@@ -122,4 +113,4 @@ def iniciar_robo():
             time.sleep(5)
 
 if __name__ == "__main__":
-    iniciar_robo() 
+    iniciar_robo()
