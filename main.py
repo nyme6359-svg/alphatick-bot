@@ -24,14 +24,6 @@ def enviar_telegram(texto):
     except Exception as e:
         print(f"Erro Telegram: {e}")
 
-def aguardar_ate(tempo_alvo):
-    while datetime.now() < tempo_alvo:
-        delta = (tempo_alvo - datetime.now()).total_seconds()
-        if delta > 1:
-            time.sleep(1)
-        else:
-            time.sleep(0.1)
-
 def verificar_preco_real(par):
     try:
         simbolo = par.replace("/", "")
@@ -47,7 +39,6 @@ def verificar_preco_real(par):
     return None
 
 def obter_preco_medio(par):
-    # Retorna a média de 3 leituras rápidas para garantir preço 100% fiável
     precos = []
     for _ in range(3):
         p = verificar_preco_real(par)
@@ -60,7 +51,9 @@ def obter_preco_medio(par):
 
 def analisar_tendencia_profissional(par):
     p1 = obter_preco_medio(par)
+    time.sleep(1)
     p2 = obter_preco_medio(par)
+    time.sleep(1)
     p3 = obter_preco_medio(par)
     
     if p1 is None or p2 is None or p3 is None:
@@ -87,12 +80,12 @@ def validar_resultado(preco_inicial, preco_atual, direcao):
         return diferenca < 0.00000
 
 def iniciar_robo():
-    print("🤖 AlphaTick Pro (Leitura Média Blindada Ativa)...")
+    print("🤖 AlphaTick Pro (Anti-Flood Absoluto Ativo)...")
     
     enviar_telegram(
         "🚀 **ALPHATICK PRO — SISTEMA REINICIADO** 🚀\n\n"
-        "🔄 `Mecanismo de dupla confirmação de preço ativado.`\n"
-        "🧹 `Histórico limpo. Prontinho para apanhar os WIN sem falhas!`\n"
+        "🔄 `Bloqueio anti-flood e sincronização de tempo reestruturados.`\n"
+        "🧹 `Histórico limpo. Operação blindada contra disparos seguidos!`\n"
         "🛠 *Manutenção rápida às 05:00 ativa.*"
     )
     
@@ -109,7 +102,7 @@ def iniciar_robo():
                 time.sleep(70)
                 continue
             
-            # Sincronização rigorosa de blocos de 5 minutos
+            # Cálculo estrito do próximo slot de 5 minutos
             minuto_atual = agora.minute
             extra = 5 - (minuto_atual % 5)
             if extra == 0:
@@ -118,8 +111,13 @@ def iniciar_robo():
             hora_entrada = agora.replace(second=0, microsecond=0) + timedelta(minutes=extra)
             momento_envio = hora_entrada - timedelta(seconds=40)
             
-            if datetime.now() < momento_envio:
-                aguardar_ate(momento_envio)
+            # Trava estricta de segurança para evitar qualquer ciclo vicioso
+            while datetime.now() < momento_envio:
+                restante = (momento_envio - datetime.now()).total_seconds()
+                if restante > 5:
+                    time.sleep(5)
+                else:
+                    time.sleep(0.5)
             
             par_atual = random.choice(PARES_ABERTOS)
             print(f"🔍 Analisando fluxo institucional para {par_atual} às {datetime.now().strftime('%H:%M:%S')}...")
@@ -146,8 +144,10 @@ def iniciar_robo():
             
             preco_inicio = obter_preco_medio(par_atual)
             
-            # Validação do Sinal Principal (Fim da 1ª vela)
-            aguardar_ate(hora_fim_op + timedelta(seconds=5))
+            # Esperar até ao fecho da operação principal com margem segura
+            while datetime.now() < (hora_fim_op + timedelta(seconds=5)):
+                time.sleep(1)
+                
             horario_str = hora_entrada.strftime('%H:%M')
             horario_atual_msg = (datetime.utcnow() + timedelta(hours=1)).strftime('%H:%M')
             
@@ -159,7 +159,8 @@ def iniciar_robo():
             else:
                 # 1º Gale
                 enviar_telegram(f"⚠️ **Loss na 1ª vela** — A aguardar fecho do 1º GALE às `{hora_gale1.strftime('%H:%M')}`...")
-                aguardar_ate(hora_gale1 + timedelta(seconds=5))
+                while datetime.now() < (hora_gale1 + timedelta(seconds=5)):
+                    time.sleep(1)
                 
                 win_gale1 = validar_resultado(preco_inicio, obter_preco_medio(par_atual), direcao)
                 
@@ -169,7 +170,8 @@ def iniciar_robo():
                 else:
                     # 2º Gale
                     enviar_telegram(f"⚠️ **Loss no 1º Gale** — A aguardar fecho do 2º GALE às `{hora_gale2.strftime('%H:%M')}`...")
-                    aguardar_ate(hora_gale2 + timedelta(seconds=5))
+                    while datetime.now() < (hora_gale2 + timedelta(seconds=5)):
+                        time.sleep(1)
                     
                     win_gale2 = validar_resultado(preco_inicio, obter_preco_medio(par_atual), direcao)
                     
@@ -203,10 +205,10 @@ def iniciar_robo():
                 enviar_telegram(bloco_relatorio)
                 historico_sinais.clear()
                 
-            time.sleep(2)
+            time.sleep(5)
         except Exception as e:
             print(f"Erro crítico evitado no ciclo: {e}")
-            time.sleep(5)
+            time.sleep(10)
 
 if __name__ == "__main__":
-    iniciar_robo() 
+    iniciar_robo()
