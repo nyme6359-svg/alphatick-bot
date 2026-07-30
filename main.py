@@ -43,7 +43,6 @@ def verificar_preco_real(par):
     return None
 
 def analisar_tendencia_profissional(par):
-    """Analisa o momento e a força do fluxo do preço para máxima assertividade"""
     p1 = verificar_preco_real(par)
     time.sleep(1.5)
     p2 = verificar_preco_real(par)
@@ -63,13 +62,13 @@ def analisar_tendencia_profissional(par):
         return "ABAIXO 🔴"
 
 def iniciar_robo():
-    print("🤖 AlphaTick Pro (Reiniciado do Zero com Sucesso)...")
+    print("🤖 AlphaTick Pro (Reiniciado com GAIN Formatado)...")
     
     enviar_telegram(
         "🚀 **ALPHATICK PRO — SISTEMA REINICIADO** 🚀\n\n"
         "🔄 `Nova versão injetada com sucesso.`\n"
         "🧹 `Histórico anterior limpo. A começar do zero!`\n"
-        "💎 *Motor Quantitativo v3.0 Ativo.*"
+        "💎 *Padrão visual ajustado.*"
     )
     
     historico_sinais = []
@@ -111,9 +110,12 @@ def iniciar_robo():
             enviar_telegram(msg_sinal)
             
             preco_inicio = verificar_preco_real(par_atual)
+            
+            # Aguarda fecho da principal
             aguardar_ate(hora_fim_op + timedelta(seconds=5))
             horario_str = hora_entrada.strftime('%H:%M')
             resultado_final = "LOSS"
+            tipo_vitoria = "WIN DIRETO"
             
             if preco_inicio is not None:
                 preco_fim = verificar_preco_real(par_atual)
@@ -124,18 +126,28 @@ def iniciar_robo():
             
             if resultado_final == "WIN":
                 historico_sinais.append((par_atual, horario_str, "WIN"))
+                enviar_telegram(f"📊 **RELATÓRIO DE OPERAÇÃO** 📊\n`{horario_str} {par_atual}` — 🟩 **WIN DIRETO**\n\n🟩 **G A I N** 🟩")
             else:
+                # Tenta Gale 1
+                enviar_telegram(f"⚠️ **Loss na 1ª vela** — A aguardar fecho do 1º GALE às `{hora_gale1.strftime('%H:%M')}`...")
                 aguardar_ate(hora_gale1 + timedelta(seconds=5))
                 preco_gale1 = verificar_preco_real(par_atual)
+                
                 if preco_inicio is not None and preco_gale1 is not None and ((preco_gale1 > preco_inicio and "ACIMA" in direcao) or (preco_gale1 < preco_inicio and "ABAIXO" in direcao)):
                     historico_sinais.append((par_atual, horario_str, "WIN"))
+                    enviar_telegram(f"📊 **RELATÓRIO DE OPERAÇÃO** 📊\n`{horario_str} {par_atual}` — 🟩 **WIN NO 1º GALE**\n\n🟩 **G A I N** 🟩")
                 else:
+                    # Tenta Gale 2
+                    enviar_telegram(f"⚠️ **Loss no 1º Gale** — A aguardar fecho do 2º GALE às `{hora_gale2.strftime('%H:%M')}`...")
                     aguardar_ate(hora_gale2 + timedelta(seconds=5))
                     preco_gale2 = verificar_preco_real(par_atual)
+                    
                     if preco_inicio is not None and preco_gale2 is not None and ((preco_gale2 > preco_inicio and "ACIMA" in direcao) or (preco_gale2 < preco_inicio and "ABAIXO" in direcao)):
                         historico_sinais.append((par_atual, horario_str, "WIN"))
+                        enviar_telegram(f"📊 **RELATÓRIO DE OPERAÇÃO** 📊\n`{horario_str} {par_atual}` — 🟩 **WIN NO 2º GALE**\n\n🟩 **G A I N** 🟩")
                     else:
                         historico_sinais.append((par_atual, horario_str, "LOSS"))
+                        enviar_telegram(f"📊 **RELATÓRIO DE OPERAÇÃO** 📊\n`{horario_str} {par_atual}` — 🟥 **LOSS**\n\n🟥 **L O S S** 🟥")
             
             if len(historico_sinais) >= 6:
                 vitorias = sum(1 for x in historico_sinais if x[2] == "WIN")
@@ -143,18 +155,18 @@ def iniciar_robo():
                 total_ops = len(historico_sinais)
                 assertividade = (vitorias / total_ops) * 100 if total_ops > 0 else 0
                 
-                bloco_relatorio = (
-                    f"📈 **FECHO DE LOTE — RELATÓRIO QUANTITATIVO** 📈\n\n"
-                )
+                bloco_relatorio = "📊 **RELATÓRIO DE OPERAÇÕES** 📊\n\n"
                 for par, h, res in historico_sinais:
-                    bloco_relatorio += f"• `{h}` {par} — {'✅ **WIN**' if res == 'WIN' else '❌ **LOSS**'}\n"
+                    icone_caixa = "🟩" if res == "WIN" else "🟥"
+                    bloco_relatorio += f"`{h} {par}` {icone_caixa}\n"
                 
                 bloco_relatorio += (
-                    f"\n───────────────────\n"
-                    f"🏆 **Placar Final:** `{vitorias}x{derrotas}`\n"
-                    f"🎯 **Assertividade:** `{assertividade:.1f}%`\n"
-                    f"📊 **Total de Operações:** `{total_ops}`\n"
-                    f"💎 *AlphaTick Pro Engine v3.0*"
+                    f"\n"
+                    f"✅ {vitorias} vitorias\n"
+                    f"❌ {derrotas} derrotas\n"
+                    f"😎 {assertividade:.0f}% de acerto:\n"
+                    f"📈 {total_ops} operações\n\n"
+                    f"📱 **Envia seu resultado para** 👉 [AlphaTick Pro]"
                 )
                 enviar_telegram(bloco_relatorio)
                 historico_sinais.clear()
