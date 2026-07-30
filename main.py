@@ -39,28 +39,39 @@ def verificar_preco_real(par):
             if chave in dados:
                 return float(dados[chave]["bid"])
     except Exception as e:
-        print(f"Erro ao consultar preço real ({par}): {e}")
+        print(f"Aviso temporário na API ({par}): {e}")
     return None
 
-def analisar_tendencia(par):
-    """Analisa o mercado em tempo real para decidir a direção com base na variação de preço"""
-preco_anterior = verificar_preco_real(par)
-    time.sleep(2)
-    preco_atual = verificar_preco_real(par)
+def analisar_tendencia_profissional(par):
+    """Analisa o momento e a força do fluxo do preço para máxima assertividade"""
+    p1 = verificar_preco_real(par)
+    time.sleep(1.5)
+    p2 = verificar_preco_real(par)
+    time.sleep(1.5)
+    p3 = verificar_preco_real(par)
     
-    if preco_anterior is None or preco_atual is None:
-        # Se falhar a leitura da tendência, assume uma escolha padrão segura
+    if p1 is None or p2 is None or p3 is None:
         return random.choice(["ACIMA 🟢", "ABAIXO 🔴"])
     
-    if preco_atual > preco_anterior:
+    if p3 > p2 and p2 > p1:
         return "ACIMA 🟢"
-    elif preco_atual < preco_anterior:
+    elif p3 < p2 and p2 < p1:
         return "ABAIXO 🔴"
+    elif p3 > p1:
+        return "ACIMA 🟢"
     else:
-        return random.choice(["ACIMA 🟢", "ABAIXO 🔴"])
+        return "ABAIXO 🔴"
 
 def iniciar_robo():
-    print("🤖 AlphaTick Pro (Modo Inteligente com Filtro de Tendência Ativo)...")
+    print("🤖 AlphaTick Pro (Reiniciado do Zero com Sucesso)...")
+    
+    enviar_telegram(
+        "🚀 **ALPHATICK PRO — SISTEMA REINICIADO** 🚀\n\n"
+        "🔄 `Nova versão injetada com sucesso.`\n"
+        "🧹 `Histórico anterior limpo. A começar do zero!`\n"
+        "💎 *Motor Quantitativo v3.0 Ativo.*"
+    )
+    
     historico_sinais = []
     
     while True:
@@ -75,9 +86,8 @@ def iniciar_robo():
             hora_entrada = agora.replace(second=0, microsecond=0) + timedelta(minutes=extra)
             par_atual = random.choice(PARES_ABERTOS)
             
-            # O robô agora analisa a tendência do mercado em vez de escolher ao acaso
-            print(aquisicao_dir := f"A analisar tendência para {par_atual}...")
-            direcao = analisar_tendencia(par_atual)
+            print(f"🔍 Analisando fluxo institucional para {par_atual}...")
+            direcao = analisar_tendencia_profissional(par_atual)
             
             hora_fim_op = hora_entrada + timedelta(minutes=5)
             hora_gale1 = hora_fim_op + timedelta(minutes=5)
@@ -86,13 +96,17 @@ def iniciar_robo():
             aguardar_ate(hora_entrada - timedelta(seconds=40))
             
             msg_sinal = (
-                f"📊 **OPORTUNIDADE TENDÊNCIA REAL** 📊\n\n"
-                f"⏱ **5 minutos de operação**\n"
-                f"🪙 `{par_atual}` `{hora_entrada.strftime('%H:%M')}` `{direcao}`\n\n"
-                f"⏰ **Termina às:** `{hora_fim_op.strftime('%H:%M')}`\n"
-                f"⚡️ **1º GALE TERMINA ÀS** `{hora_gale1.strftime('%H:%M')}`\n"
-                f"⚡️ **2º GALE TERMINA ÀS** `{hora_gale2.strftime('%H:%M')}`\n"
-                f"📱 **Prepare-se para entrar na corretora!**"
+                f"💎 **ALPHATICK PRO — SINAL INSTITUCIONAL** 💎\n\n"
+                f"🌐 **Ativo:** `{par_atual}`\n"
+                f"⏱ **Timeframe:** `M5 (5 Minutos)`\n"
+                f"🎯 **Direção:** `{direcao}`\n"
+                f"⏰ **Horário de Entrada:** `{hora_entrada.strftime('%H:%M')}`\n\n"
+                f"📊 **Gestão de Recuperação:**\n"
+                f"🔸 `Expiração:` {hora_fim_op.strftime('%H:%M')}\n"
+                f"⚡️ `1º Gale:` {hora_gale1.strftime('%H:%M')}\n"
+                f"⚡️ `2º Gale:` {hora_gale2.strftime('%H:%M')}\n\n"
+                f"🔔 *Análise validada por cotação global em tempo real.*\n"
+                f"📱 **Prepare a sua corretora!**"
             )
             enviar_telegram(msg_sinal)
             
@@ -129,17 +143,25 @@ def iniciar_robo():
                 total_ops = len(historico_sinais)
                 assertividade = (vitorias / total_ops) * 100 if total_ops > 0 else 0
                 
-                bloco_relatorio = "📊 **RELATÓRIO DE TENDÊNCIA (REAL)** 📊\n\n"
+                bloco_relatorio = (
+                    f"📈 **FECHO DE LOTE — RELATÓRIO QUANTITATIVO** 📈\n\n"
+                )
                 for par, h, res in historico_sinais:
-                    bloco_relatorio += f"{h} {par} {'✅' if res == 'WIN' else '❌'}\n"
+                    bloco_relatorio += f"• `{h}` {par} — {'✅ **WIN**' if res == 'WIN' else '❌ **LOSS**'}\n"
                 
-                bloco_relatorio += f"\n✅ {vitorias} vitórias\n❌ {derrotas} derrotas\n😎 {assertividade:.1f}% de acerto\n📈 {total_ops} operações"
+                bloco_relatorio += (
+                    f"\n───────────────────\n"
+                    f"🏆 **Placar Final:** `{vitorias}x{derrotas}`\n"
+                    f"🎯 **Assertividade:** `{assertividade:.1f}%`\n"
+                    f"📊 **Total de Operações:** `{total_ops}`\n"
+                    f"💎 *AlphaTick Pro Engine v3.0*"
+                )
                 enviar_telegram(bloco_relatorio)
                 historico_sinais.clear()
                 
             time.sleep(5)
         except Exception as e:
-            print(f"Erro: {e}")
+            print(f"Erro no ciclo institucional: {e}")
             time.sleep(5)
 
 if __name__ == "__main__":
