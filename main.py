@@ -44,9 +44,9 @@ def verificar_preco_real(par):
 
 def analisar_tendencia_profissional(par):
     p1 = verificar_preco_real(par)
-    time.sleep(1.5)
+    time.sleep(1)
     p2 = verificar_preco_real(par)
-    time.sleep(1.5)
+    time.sleep(1)
     p3 = verificar_preco_real(par)
     
     if p1 is None or p2 is None or p3 is None:
@@ -62,13 +62,13 @@ def analisar_tendencia_profissional(par):
         return "ABAIXO 🔴"
 
 def iniciar_robo():
-    print("🤖 AlphaTick Pro (Reiniciado com GAIN Formatado)...")
+    print("🤖 AlphaTick Pro (Blindado e com Manutenção às 05:00 Ativa)...")
     
     enviar_telegram(
         "🚀 **ALPHATICK PRO — SISTEMA REINICIADO** 🚀\n\n"
         "🔄 `Nova versão injetada com sucesso.`\n"
         "🧹 `Histórico anterior limpo. A começar do zero!`\n"
-        "💎 *Padrão visual ajustado.*"
+        "🛠 *Manutenção agendada para as 05:00.*"
     )
     
     historico_sinais = []
@@ -76,6 +76,13 @@ def iniciar_robo():
     while True:
         try:
             agora = datetime.utcnow() + timedelta(hours=1)
+            
+            # Rotina de Manutenção diária às 05:00
+            if agora.hour == 5 and agora.minute == 0:
+                enviar_telegram("🛠 **MANUTENÇÃO PROGRAMADA DAS 05:00** 🛠\n\n`A reiniciar sistemas e limpar lotes para o novo dia...`")
+                historico_sinais.clear()
+                time.sleep(70) # Aguarda passar o minuto 00 para não repetir
+                continue
             
             minuto_atual = agora.minute
             extra = 5 - (minuto_atual % 5)
@@ -92,7 +99,10 @@ def iniciar_robo():
             hora_gale1 = hora_fim_op + timedelta(minutes=5)
             hora_gale2 = hora_gale1 + timedelta(minutes=5)
             
-            aguardar_ate(hora_entrada - timedelta(seconds=40))
+            # Cálculo seguro de tempo para evitar congelamentos
+            tempo_ate_envio = (hora_entrada - timedelta(seconds=40)) - datetime.now()
+            if tempo_ate_envio.total_seconds() > 0:
+                aguardar_ate(hora_entrada - timedelta(seconds=40))
             
             msg_sinal = (
                 f"💎 **ALPHATICK PRO — SINAL INSTITUCIONAL** 💎\n\n"
@@ -111,11 +121,10 @@ def iniciar_robo():
             
             preco_inicio = verificar_preco_real(par_atual)
             
-            # Aguarda fecho da principal
             aguardar_ate(hora_fim_op + timedelta(seconds=5))
             horario_str = hora_entrada.strftime('%H:%M')
+            horario_atual_msg = (datetime.utcnow() + timedelta(hours=1)).strftime('%H:%M')
             resultado_final = "LOSS"
-            tipo_vitoria = "WIN DIRETO"
             
             if preco_inicio is not None:
                 preco_fim = verificar_preco_real(par_atual)
@@ -126,28 +135,26 @@ def iniciar_robo():
             
             if resultado_final == "WIN":
                 historico_sinais.append((par_atual, horario_str, "WIN"))
-                enviar_telegram(f"📊 **RELATÓRIO DE OPERAÇÃO** 📊\n`{horario_str} {par_atual}` — 🟩 **WIN DIRETO**\n\n🟩 **G A I N** 🟩")
+                enviar_telegram(f"`{horario_str} {par_atual}` — ✅\n\n`{horario_atual_msg}`\n🟢 **W I N** 🟢")
             else:
-                # Tenta Gale 1
                 enviar_telegram(f"⚠️ **Loss na 1ª vela** — A aguardar fecho do 1º GALE às `{hora_gale1.strftime('%H:%M')}`...")
                 aguardar_ate(hora_gale1 + timedelta(seconds=5))
                 preco_gale1 = verificar_preco_real(par_atual)
                 
                 if preco_inicio is not None and preco_gale1 is not None and ((preco_gale1 > preco_inicio and "ACIMA" in direcao) or (preco_gale1 < preco_inicio and "ABAIXO" in direcao)):
                     historico_sinais.append((par_atual, horario_str, "WIN"))
-                    enviar_telegram(f"📊 **RELATÓRIO DE OPERAÇÃO** 📊\n`{horario_str} {par_atual}` — 🟩 **WIN NO 1º GALE**\n\n🟩 **G A I N** 🟩")
+                    enviar_telegram(f"`{horario_str} {par_atual}` — ✅\n\n`{(datetime.utcnow() + timedelta(hours=1)).strftime('%H:%M')}`\n🟢 **W I N** 🟢")
                 else:
-                    # Tenta Gale 2
                     enviar_telegram(f"⚠️ **Loss no 1º Gale** — A aguardar fecho do 2º GALE às `{hora_gale2.strftime('%H:%M')}`...")
                     aguardar_ate(hora_gale2 + timedelta(seconds=5))
                     preco_gale2 = verificar_preco_real(par_atual)
                     
                     if preco_inicio is not None and preco_gale2 is not None and ((preco_gale2 > preco_inicio and "ACIMA" in direcao) or (preco_gale2 < preco_inicio and "ABAIXO" in direcao)):
                         historico_sinais.append((par_atual, horario_str, "WIN"))
-                        enviar_telegram(f"📊 **RELATÓRIO DE OPERAÇÃO** 📊\n`{horario_str} {par_atual}` — 🟩 **WIN NO 2º GALE**\n\n🟩 **G A I N** 🟩")
+                        enviar_telegram(f"`{horario_str} {par_atual}` — ✅\n\n`{(datetime.utcnow() + timedelta(hours=1)).strftime('%H:%M')}`\n🟢 **W I N** 🟢")
                     else:
                         historico_sinais.append((par_atual, horario_str, "LOSS"))
-                        enviar_telegram(f"📊 **RELATÓRIO DE OPERAÇÃO** 📊\n`{horario_str} {par_atual}` — 🟥 **LOSS**\n\n🟥 **L O S S** 🟥")
+                        enviar_telegram(f"`{horario_str} {par_atual}` — ❌\n\n`{(datetime.utcnow() + timedelta(hours=1)).strftime('%H:%M')}`\n🔴 **L O S S** 🔴")
             
             if len(historico_sinais) >= 6:
                 vitorias = sum(1 for x in historico_sinais if x[2] == "WIN")
@@ -157,14 +164,14 @@ def iniciar_robo():
                 
                 bloco_relatorio = "📊 **RELATÓRIO DE OPERAÇÕES** 📊\n\n"
                 for par, h, res in historico_sinais:
-                    icone_caixa = "🟩" if res == "WIN" else "🟥"
-                    bloco_relatorio += f"`{h} {par}` {icone_caixa}\n"
+                    icone = "✅" if res == "WIN" else "❌"
+                    bloco_relatorio += f"`{h} {par}` {icone}\n"
                 
                 bloco_relatorio += (
                     f"\n"
                     f"✅ {vitorias} vitorias\n"
                     f"❌ {derrotas} derrotas\n"
-                    f"😎 {assertividade:.0f}% de acerto:\n"
+                    f"😎 {assertividade:.1f}% de acerto:\n"
                     f"📈 {total_ops} operações\n\n"
                     f"📱 **Envia seu resultado para** 👉 [AlphaTick Pro]"
                 )
@@ -173,8 +180,8 @@ def iniciar_robo():
                 
             time.sleep(5)
         except Exception as e:
-            print(f"Erro no ciclo institucional: {e}")
+            print(f"Erro crítico evitado no ciclo: {e}")
             time.sleep(5)
 
 if __name__ == "__main__":
-    iniciar_robo()
+    iniciar_robo() 
