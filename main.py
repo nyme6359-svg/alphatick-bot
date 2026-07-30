@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 import time
 import random
 
-TELEGRAM_TOKEN = "8787520019:AAHG9i_ng32anoh_DWtLFjdrZIPjTDK-lRs"
+TELEGRAM_TOKEN = "8787520019:AAFOQYsuatmUNyCQGRkRGDdEg_5sST14I8"
 CHAT_ID = "771454310"
 
 PARES_ABERTOS = [
@@ -74,7 +74,6 @@ def validar_resultado(preco_inicial, preco_atual, direcao):
     
     diferenca = preco_atual - preco_inicial
     
-    # Validação estrita baseada na direção real do sinal
     if "ACIMA" in direcao:
         return diferenca > 0.00000
     elif "ABAIXO" in direcao:
@@ -82,12 +81,12 @@ def validar_resultado(preco_inicial, preco_atual, direcao):
     return False
 
 def iniciar_robo():
-    print("🤖 AlphaTick Pro (Validação de Direção Corrigida Ativa)...")
+    print("🤖 AlphaTick Pro (Com novo Token Ativo)...")
     
     enviar_telegram(
         "🚀 **ALPHATICK PRO — SISTEMA REINICIADO** 🚀\n\n"
-        "🔄 `Filtro de direção de preço ajustado com exatidão absoluta.`\n"
-        "🧹 `Histórico limpo e pronto a operar sem desfasagem!`\n"
+        "🔄 `Conexão com o Telegram restabelecida com sucesso.`\n"
+        "🧹 `Histórico limpo e pronto a operar!`\n"
         "🛠 *Manutenção rápida às 05:00 ativa.*"
     )
     
@@ -97,14 +96,12 @@ def iniciar_robo():
         try:
             agora = datetime.utcnow() + timedelta(hours=1)
             
-            # Manutenção rápida às 05:00
             if agora.hour == 5 and agora.minute == 0:
                 enviar_telegram("🛠 **MANUTENÇÃO PROGRAMADA DAS 05:00** 🛠\n\n`A reiniciar sistemas e limpar lotes para o novo dia...`")
                 historico_sinais.clear()
                 time.sleep(70)
                 continue
             
-            # Cálculo estrito do próximo slot de 5 minutos
             minuto_atual = agora.minute
             extra = 5 - (minuto_atual % 5)
             if extra == 0:
@@ -145,7 +142,6 @@ def iniciar_robo():
             
             preco_inicio = obter_preco_medio(par_atual)
             
-            # Esperar até ao fecho da operação principal
             while datetime.now() < (hora_fim_op + timedelta(seconds=5)):
                 time.sleep(1)
                 
@@ -158,7 +154,6 @@ def iniciar_robo():
                 historico_sinais.append((par_atual, horario_str, "WIN"))
                 enviar_telegram(f"`{horario_str} {par_atual}` — ✅\n\n`{horario_atual_msg}`\n🟢 **W I N** 🟢")
             else:
-                # 1º Gale
                 enviar_telegram(f"⚠️ **Loss na 1ª vela** — A aguardar fecho do 1º GALE às `{hora_gale1.strftime('%H:%M')}`...")
                 while datetime.now() < (hora_gale1 + timedelta(seconds=5)):
                     time.sleep(1)
@@ -169,7 +164,6 @@ def iniciar_robo():
                     historico_sinais.append((par_atual, horario_str, "WIN"))
                     enviar_telegram(f"`{horario_str} {par_atual}` — ✅\n\n`{(datetime.utcnow() + timedelta(hours=1)).strftime('%H:%M')}`\n🟢 **W I N** 🟢")
                 else:
-                    # 2º Gale
                     enviar_telegram(f"⚠️ **Loss no 1º Gale** — A aguardar fecho do 2º GALE às `{hora_gale2.strftime('%H:%M')}`...")
                     while datetime.now() < (hora_gale2 + timedelta(seconds=5)):
                         time.sleep(1)
@@ -183,7 +177,6 @@ def iniciar_robo():
                         historico_sinais.append((par_atual, horario_str, "LOSS"))
                         enviar_telegram(f"`{horario_str} {par_atual}` — ❌\n\n`{(datetime.utcnow() + timedelta(hours=1)).strftime('%H:%M')}`\n🔴 **L O S S** 🔴")
             
-            # Relatório a cada lote de 6 operações
             if len(historico_sinais) >= 6:
                 vitorias = sum(1 for x in historico_sinais if x[2] == "WIN")
                 derrotas = sum(1 for x in historico_sinais if x[2] == "LOSS")
