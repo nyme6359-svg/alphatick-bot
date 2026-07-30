@@ -26,7 +26,11 @@ def enviar_telegram(texto):
 
 def aguardar_ate(tempo_alvo):
     while datetime.now() < tempo_alvo:
-        time.sleep(1)
+        delta = (tempo_alvo - datetime.now()).total_seconds()
+        if delta > 1:
+            time.sleep(1)
+        else:
+            time.sleep(0.1)
 
 def verificar_preco_real(par):
     try:
@@ -62,13 +66,13 @@ def analisar_tendencia_profissional(par):
         return "ABAIXO 🔴"
 
 def iniciar_robo():
-    print("🤖 AlphaTick Pro (Blindado e com Manutenção às 05:00 Ativa)...")
+    print("🤖 AlphaTick Pro (Versão Suprema Definitiva Ativa)...")
     
     enviar_telegram(
         "🚀 **ALPHATICK PRO — SISTEMA REINICIADO** 🚀\n\n"
-        "🔄 `Nova versão injetada com sucesso.`\n"
-        "🧹 `Histórico anterior limpo. A começar do zero!`\n"
-        "🛠 *Manutenção agendada para as 05:00.*"
+        "🔄 `Versão suprema injetada com sucesso.`\n"
+        "🧹 `Controlo absoluto de tempo e relatórios ativado.`\n"
+        "🛠 *Manutenção rápida agendada para as 05:00.*"
     )
     
     historico_sinais = []
@@ -77,32 +81,32 @@ def iniciar_robo():
         try:
             agora = datetime.utcnow() + timedelta(hours=1)
             
-            # Rotina de Manutenção diária às 05:00
+            # Manutenção limpa e rápida às 05:00 (apenas 70 segundos para não interferir)
             if agora.hour == 5 and agora.minute == 0:
                 enviar_telegram("🛠 **MANUTENÇÃO PROGRAMADA DAS 05:00** 🛠\n\n`A reiniciar sistemas e limpar lotes para o novo dia...`")
                 historico_sinais.clear()
-                time.sleep(70) # Aguarda passar o minuto 00 para não repetir
+                time.sleep(70)
                 continue
             
+            # Sincronização rigorosa de blocos de 5 minutos
             minuto_atual = agora.minute
             extra = 5 - (minuto_atual % 5)
             if extra == 0:
                 extra = 5
                 
             hora_entrada = agora.replace(second=0, microsecond=0) + timedelta(minutes=extra)
-            par_atual = random.choice(PARES_ABERTOS)
+            momento_envio = hora_entrada - timedelta(seconds=40)
             
-            print(f"🔍 Analisando fluxo institucional para {par_atual}...")
+            if datetime.now() < momento_envio:
+                aguardar_ate(momento_envio)
+            
+            par_atual = random.choice(PARES_ABERTOS)
+            print(f"🔍 Analisando fluxo institucional para {par_atual} às {datetime.now().strftime('%H:%M:%S')}...")
             direcao = analisar_tendencia_profissional(par_atual)
             
             hora_fim_op = hora_entrada + timedelta(minutes=5)
             hora_gale1 = hora_fim_op + timedelta(minutes=5)
             hora_gale2 = hora_gale1 + timedelta(minutes=5)
-            
-            # Cálculo seguro de tempo para evitar congelamentos
-            tempo_ate_envio = (hora_entrada - timedelta(seconds=40)) - datetime.now()
-            if tempo_ate_envio.total_seconds() > 0:
-                aguardar_ate(hora_entrada - timedelta(seconds=40))
             
             msg_sinal = (
                 f"💎 **ALPHATICK PRO — SINAL INSTITUCIONAL** 💎\n\n"
@@ -121,6 +125,7 @@ def iniciar_robo():
             
             preco_inicio = verificar_preco_real(par_atual)
             
+            # Validação do Sinal Principal (Fim da 1ª vela)
             aguardar_ate(hora_fim_op + timedelta(seconds=5))
             horario_str = hora_entrada.strftime('%H:%M')
             horario_atual_msg = (datetime.utcnow() + timedelta(hours=1)).strftime('%H:%M')
@@ -137,6 +142,7 @@ def iniciar_robo():
                 historico_sinais.append((par_atual, horario_str, "WIN"))
                 enviar_telegram(f"`{horario_str} {par_atual}` — ✅\n\n`{horario_atual_msg}`\n🟢 **W I N** 🟢")
             else:
+                # 1º Gale
                 enviar_telegram(f"⚠️ **Loss na 1ª vela** — A aguardar fecho do 1º GALE às `{hora_gale1.strftime('%H:%M')}`...")
                 aguardar_ate(hora_gale1 + timedelta(seconds=5))
                 preco_gale1 = verificar_preco_real(par_atual)
@@ -145,6 +151,7 @@ def iniciar_robo():
                     historico_sinais.append((par_atual, horario_str, "WIN"))
                     enviar_telegram(f"`{horario_str} {par_atual}` — ✅\n\n`{(datetime.utcnow() + timedelta(hours=1)).strftime('%H:%M')}`\n🟢 **W I N** 🟢")
                 else:
+                    # 2º Gale
                     enviar_telegram(f"⚠️ **Loss no 1º Gale** — A aguardar fecho do 2º GALE às `{hora_gale2.strftime('%H:%M')}`...")
                     aguardar_ate(hora_gale2 + timedelta(seconds=5))
                     preco_gale2 = verificar_preco_real(par_atual)
@@ -156,6 +163,7 @@ def iniciar_robo():
                         historico_sinais.append((par_atual, horario_str, "LOSS"))
                         enviar_telegram(f"`{horario_str} {par_atual}` — ❌\n\n`{(datetime.utcnow() + timedelta(hours=1)).strftime('%H:%M')}`\n🔴 **L O S S** 🔴")
             
+            # Relatório a cada lote de 6 operações
             if len(historico_sinais) >= 6:
                 vitorias = sum(1 for x in historico_sinais if x[2] == "WIN")
                 derrotas = sum(1 for x in historico_sinais if x[2] == "LOSS")
@@ -178,7 +186,7 @@ def iniciar_robo():
                 enviar_telegram(bloco_relatorio)
                 historico_sinais.clear()
                 
-            time.sleep(5)
+            time.sleep(2)
         except Exception as e:
             print(f"Erro crítico evitado no ciclo: {e}")
             time.sleep(5)
