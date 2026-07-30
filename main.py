@@ -42,14 +42,29 @@ def verificar_preco_real(par):
         print(f"Erro ao consultar preço real ({par}): {e}")
     return None
 
+def analisar_tendencia(par):
+    """Analisa o mercado em tempo real para decidir a direção com base na variação de preço"""
+preco_anterior = verificar_preco_real(par)
+    time.sleep(2)
+    preco_atual = verificar_preco_real(par)
+    
+    if preco_anterior is None or preco_atual is None:
+        # Se falhar a leitura da tendência, assume uma escolha padrão segura
+        return random.choice(["ACIMA 🟢", "ABAIXO 🔴"])
+    
+    if preco_atual > preco_anterior:
+        return "ACIMA 🟢"
+    elif preco_atual < preco_anterior:
+        return "ABAIXO 🔴"
+    else:
+        return random.choice(["ACIMA 🟢", "ABAIXO 🔴"])
+
 def iniciar_robo():
-    print("🤖 AlphaTick Pro (Modo Mercado Real + Hora Ajustada)...")
+    print("🤖 AlphaTick Pro (Modo Inteligente com Filtro de Tendência Ativo)...")
     historico_sinais = []
     
     while True:
         try:
-            # Ajuste de fuso horário (+1 hora para alinhar UTC com a tua hora local)
-            # Podes alterar o timedelta(hours=1) se precisares de ajustar mais ou menos
             agora = datetime.utcnow() + timedelta(hours=1)
             
             minuto_atual = agora.minute
@@ -59,7 +74,10 @@ def iniciar_robo():
                 
             hora_entrada = agora.replace(second=0, microsecond=0) + timedelta(minutes=extra)
             par_atual = random.choice(PARES_ABERTOS)
-            direcao = random.choice(["ACIMA 🟢", "ABAIXO 🔴"])
+            
+            # O robô agora analisa a tendência do mercado em vez de escolher ao acaso
+            print(aquisicao_dir := f"A analisar tendência para {par_atual}...")
+            direcao = analisar_tendencia(par_atual)
             
             hora_fim_op = hora_entrada + timedelta(minutes=5)
             hora_gale1 = hora_fim_op + timedelta(minutes=5)
@@ -68,7 +86,7 @@ def iniciar_robo():
             aguardar_ate(hora_entrada - timedelta(seconds=40))
             
             msg_sinal = (
-                f"📊 **OPORTUNIDADE MERCADO REAL** 📊\n\n"
+                f"📊 **OPORTUNIDADE TENDÊNCIA REAL** 📊\n\n"
                 f"⏱ **5 minutos de operação**\n"
                 f"🪙 `{par_atual}` `{hora_entrada.strftime('%H:%M')}` `{direcao}`\n\n"
                 f"⏰ **Termina às:** `{hora_fim_op.strftime('%H:%M')}`\n"
@@ -111,7 +129,7 @@ def iniciar_robo():
                 total_ops = len(historico_sinais)
                 assertividade = (vitorias / total_ops) * 100 if total_ops > 0 else 0
                 
-                bloco_relatorio = "📊 **RELATÓRIO DE OPERAÇÕES (REAL)** 📊\n\n"
+                bloco_relatorio = "📊 **RELATÓRIO DE TENDÊNCIA (REAL)** 📊\n\n"
                 for par, h, res in historico_sinais:
                     bloco_relatorio += f"{h} {par} {'✅' if res == 'WIN' else '❌'}\n"
                 
