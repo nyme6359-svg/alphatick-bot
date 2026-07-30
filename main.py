@@ -46,12 +46,22 @@ def verificar_preco_real(par):
         print(f"Aviso temporário na API ({par}): {e}")
     return None
 
+def obter_preco_medio(par):
+    # Retorna a média de 3 leituras rápidas para garantir preço 100% fiável
+    precos = []
+    for _ in range(3):
+        p = verificar_preco_real(par)
+        if p is not None:
+            precos.append(p)
+        time.sleep(0.5)
+    if precos:
+        return sum(precos) / len(precos)
+    return None
+
 def analisar_tendencia_profissional(par):
-    p1 = verificar_preco_real(par)
-    time.sleep(1)
-    p2 = verificar_preco_real(par)
-    time.sleep(1)
-    p3 = verificar_preco_real(par)
+    p1 = obter_preco_medio(par)
+    p2 = obter_preco_medio(par)
+    p3 = obter_preco_medio(par)
     
     if p1 is None or p2 is None or p3 is None:
         return random.choice(["ACIMA 🟢", "ABAIXO 🔴"])
@@ -69,21 +79,20 @@ def validar_resultado(preco_inicial, preco_atual, direcao):
     if preco_inicial is None or preco_atual is None:
         return False
     
-    # Margem de tolerância para evitar falsos loss por décimas de pips
     diferenca = preco_atual - preco_inicial
     
     if "ACIMA" in direcao:
-        return diferenca >= -0.00002
+        return diferenca > 0.00000
     else:
-        return diferenca <= 0.00002
+        return diferenca < 0.00000
 
 def iniciar_robo():
-    print("🤖 AlphaTick Pro (Validação de WIN Direto Corrigida)...")
+    print("🤖 AlphaTick Pro (Leitura Média Blindada Ativa)...")
     
     enviar_telegram(
         "🚀 **ALPHATICK PRO — SISTEMA REINICIADO** 🚀\n\n"
-        "🔄 `Correção de WIN Direto aplicada com sucesso.`\n"
-        "🧹 `Histórico limpo. Pronto a operar com exatidão!`\n"
+        "🔄 `Mecanismo de dupla confirmação de preço ativado.`\n"
+        "🧹 `Histórico limpo. Prontinho para apanhar os WIN sem falhas!`\n"
         "🛠 *Manutenção rápida às 05:00 ativa.*"
     )
     
@@ -135,14 +144,14 @@ def iniciar_robo():
             )
             enviar_telegram(msg_sinal)
             
-            preco_inicio = verificar_preco_real(par_atual)
+            preco_inicio = obter_preco_medio(par_atual)
             
             # Validação do Sinal Principal (Fim da 1ª vela)
             aguardar_ate(hora_fim_op + timedelta(seconds=5))
             horario_str = hora_entrada.strftime('%H:%M')
             horario_atual_msg = (datetime.utcnow() + timedelta(hours=1)).strftime('%H:%M')
             
-            win_direto = validar_resultado(preco_inicio, verificar_preco_real(par_atual), direcao)
+            win_direto = validar_resultado(preco_inicio, obter_preco_medio(par_atual), direcao)
             
             if win_direto:
                 historico_sinais.append((par_atual, horario_str, "WIN"))
@@ -152,7 +161,7 @@ def iniciar_robo():
                 enviar_telegram(f"⚠️ **Loss na 1ª vela** — A aguardar fecho do 1º GALE às `{hora_gale1.strftime('%H:%M')}`...")
                 aguardar_ate(hora_gale1 + timedelta(seconds=5))
                 
-                win_gale1 = validar_resultado(preco_inicio, verificar_preco_real(par_atual), direcao)
+                win_gale1 = validar_resultado(preco_inicio, obter_preco_medio(par_atual), direcao)
                 
                 if win_gale1:
                     historico_sinais.append((par_atual, horario_str, "WIN"))
@@ -162,7 +171,7 @@ def iniciar_robo():
                     enviar_telegram(f"⚠️ **Loss no 1º Gale** — A aguardar fecho do 2º GALE às `{hora_gale2.strftime('%H:%M')}`...")
                     aguardar_ate(hora_gale2 + timedelta(seconds=5))
                     
-                    win_gale2 = validar_resultado(preco_inicio, verificar_preco_real(par_atual), direcao)
+                    win_gale2 = validar_resultado(preco_inicio, obter_preco_medio(par_atual), direcao)
                     
                     if win_gale2:
                         historico_sinais.append((par_atual, horario_str, "WIN"))
