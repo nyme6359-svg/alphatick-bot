@@ -74,18 +74,20 @@ def validar_resultado(preco_inicial, preco_atual, direcao):
     
     diferenca = preco_atual - preco_inicial
     
+    # Validação estrita baseada na direção real do sinal
     if "ACIMA" in direcao:
         return diferenca > 0.00000
-    else:
+    elif "ABAIXO" in direcao:
         return diferenca < 0.00000
+    return False
 
 def iniciar_robo():
-    print("🤖 AlphaTick Pro (Anti-Flood Absoluto Ativo)...")
+    print("🤖 AlphaTick Pro (Validação de Direção Corrigida Ativa)...")
     
     enviar_telegram(
         "🚀 **ALPHATICK PRO — SISTEMA REINICIADO** 🚀\n\n"
-        "🔄 `Bloqueio anti-flood e sincronização de tempo reestruturados.`\n"
-        "🧹 `Histórico limpo. Operação blindada contra disparos seguidos!`\n"
+        "🔄 `Filtro de direção de preço ajustado com exatidão absoluta.`\n"
+        "🧹 `Histórico limpo e pronto a operar sem desfasagem!`\n"
         "🛠 *Manutenção rápida às 05:00 ativa.*"
     )
     
@@ -111,7 +113,6 @@ def iniciar_robo():
             hora_entrada = agora.replace(second=0, microsecond=0) + timedelta(minutes=extra)
             momento_envio = hora_entrada - timedelta(seconds=40)
             
-            # Trava estricta de segurança para evitar qualquer ciclo vicioso
             while datetime.now() < momento_envio:
                 restante = (momento_envio - datetime.now()).total_seconds()
                 if restante > 5:
@@ -144,7 +145,7 @@ def iniciar_robo():
             
             preco_inicio = obter_preco_medio(par_atual)
             
-            # Esperar até ao fecho da operação principal com margem segura
+            # Esperar até ao fecho da operação principal
             while datetime.now() < (hora_fim_op + timedelta(seconds=5)):
                 time.sleep(1)
                 
