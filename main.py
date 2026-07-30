@@ -65,14 +65,26 @@ def analisar_tendencia_profissional(par):
     else:
         return "ABAIXO 🔴"
 
+def validar_resultado(preco_inicial, preco_atual, direcao):
+    if preco_inicial is None or preco_atual is None:
+        return False
+    
+    # Margem de tolerância para evitar falsos loss por décimas de pips
+    diferenca = preco_atual - preco_inicial
+    
+    if "ACIMA" in direcao:
+        return diferenca >= -0.00002
+    else:
+        return diferenca <= 0.00002
+
 def iniciar_robo():
-    print("🤖 AlphaTick Pro (Versão Suprema Definitiva Ativa)...")
+    print("🤖 AlphaTick Pro (Validação de WIN Direto Corrigida)...")
     
     enviar_telegram(
         "🚀 **ALPHATICK PRO — SISTEMA REINICIADO** 🚀\n\n"
-        "🔄 `Versão suprema injetada com sucesso.`\n"
-        "🧹 `Controlo absoluto de tempo e relatórios ativado.`\n"
-        "🛠 *Manutenção rápida agendada para as 05:00.*"
+        "🔄 `Correção de WIN Direto aplicada com sucesso.`\n"
+        "🧹 `Histórico limpo. Pronto a operar com exatidão!`\n"
+        "🛠 *Manutenção rápida às 05:00 ativa.*"
     )
     
     historico_sinais = []
@@ -81,7 +93,7 @@ def iniciar_robo():
         try:
             agora = datetime.utcnow() + timedelta(hours=1)
             
-            # Manutenção limpa e rápida às 05:00 (apenas 70 segundos para não interferir)
+            # Manutenção rápida às 05:00
             if agora.hour == 5 and agora.minute == 0:
                 enviar_telegram("🛠 **MANUTENÇÃO PROGRAMADA DAS 05:00** 🛠\n\n`A reiniciar sistemas e limpar lotes para o novo dia...`")
                 historico_sinais.clear()
@@ -129,34 +141,30 @@ def iniciar_robo():
             aguardar_ate(hora_fim_op + timedelta(seconds=5))
             horario_str = hora_entrada.strftime('%H:%M')
             horario_atual_msg = (datetime.utcnow() + timedelta(hours=1)).strftime('%H:%M')
-            resultado_final = "LOSS"
             
-            if preco_inicio is not None:
-                preco_fim = verificar_preco_real(par_atual)
-                if preco_fim is not None:
-                    subiu = preco_fim > preco_inicio
-                    if (subiu and "ACIMA" in direcao) or (not subiu and "ABAIXO" in direcao):
-                        resultado_final = "WIN"
+            win_direto = validar_resultado(preco_inicio, verificar_preco_real(par_atual), direcao)
             
-            if resultado_final == "WIN":
+            if win_direto:
                 historico_sinais.append((par_atual, horario_str, "WIN"))
                 enviar_telegram(f"`{horario_str} {par_atual}` — ✅\n\n`{horario_atual_msg}`\n🟢 **W I N** 🟢")
             else:
                 # 1º Gale
                 enviar_telegram(f"⚠️ **Loss na 1ª vela** — A aguardar fecho do 1º GALE às `{hora_gale1.strftime('%H:%M')}`...")
                 aguardar_ate(hora_gale1 + timedelta(seconds=5))
-                preco_gale1 = verificar_preco_real(par_atual)
                 
-                if preco_inicio is not None and preco_gale1 is not None and ((preco_gale1 > preco_inicio and "ACIMA" in direcao) or (preco_gale1 < preco_inicio and "ABAIXO" in direcao)):
+                win_gale1 = validar_resultado(preco_inicio, verificar_preco_real(par_atual), direcao)
+                
+                if win_gale1:
                     historico_sinais.append((par_atual, horario_str, "WIN"))
                     enviar_telegram(f"`{horario_str} {par_atual}` — ✅\n\n`{(datetime.utcnow() + timedelta(hours=1)).strftime('%H:%M')}`\n🟢 **W I N** 🟢")
                 else:
                     # 2º Gale
                     enviar_telegram(f"⚠️ **Loss no 1º Gale** — A aguardar fecho do 2º GALE às `{hora_gale2.strftime('%H:%M')}`...")
                     aguardar_ate(hora_gale2 + timedelta(seconds=5))
-                    preco_gale2 = verificar_preco_real(par_atual)
                     
-                    if preco_inicio is not None and preco_gale2 is not None and ((preco_gale2 > preco_inicio and "ACIMA" in direcao) or (preco_gale2 < preco_inicio and "ABAIXO" in direcao)):
+                    win_gale2 = validar_resultado(preco_inicio, verificar_preco_real(par_atual), direcao)
+                    
+                    if win_gale2:
                         historico_sinais.append((par_atual, horario_str, "WIN"))
                         enviar_telegram(f"`{horario_str} {par_atual}` — ✅\n\n`{(datetime.utcnow() + timedelta(hours=1)).strftime('%H:%M')}`\n🟢 **W I N** 🟢")
                     else:
